@@ -22,7 +22,7 @@ describe("POST /console", () => {
         expect(insertedConsole.name).toBe(createdConsole.name);
     });
 
-    it("should respond with status 209 and not insert a conflicted console", async () => {
+    it("should respond with status 409 and not insert a conflicted console", async () => {
       const createdConsole = await createConsole();
       const response = await api.post("/consoles").send({
         name: createdConsole.name

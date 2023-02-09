@@ -2,7 +2,7 @@ import supertest from "supertest";
 import app from "app";
 import prisma from "config/database";
 import httpStatus from "http-status";
-import createConsole from "./factories/consoles-factory";
+import createConsole from "../factories/consoles-factory";
 
 beforeEach(async () => {
     await prisma.console.deleteMany({});

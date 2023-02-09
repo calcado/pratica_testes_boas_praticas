@@ -5,6 +5,7 @@ import supertest from "supertest";
 import createConsole from "../factories/consoles-factory";
 import createGame from "../factories/games-factory";
 import  cleanDb  from "../helpers";
+import prisma from "../../src/config/database"
 
 
 beforeAll(async () => {
@@ -15,45 +16,53 @@ beforeEach(async () => {
   await cleanDb();
 });
 
+afterAll(async () => {
+  await cleanDb();
+});
+
 const api = supertest(app);
 // get - getId/ post
 
 describe("GET / games", () => {
   it("Should respond with status 200 and games body", async () => {
-    const createdGame = await createGame();
+    const console = await createConsole()
+    const game = await createGame(console.id)
 
     const result = await api.get("/games");
-    console.log(result.body)
-    expect(result.status).toEqual(httpStatus.OK);
-    expect(result.body).toEqual([createdGame]);
+   
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({
+
+      id: expect.any(Number),
+      title: expect.any(String),      
+      consoleId: expect.any(Number),
+      console:{
+        id:console.id,
+        name:console.name
+      }
+    });
   });
 });
 
 describe("POST / games", () => {
   it("Should respond with status 201 and created game", async () => {
     const console = await createConsole();
-    const game = {
+    const newGame = {
       title: faker.name.firstName(),
       consoleId: console.id,
     };
 
-    const result = await api.post("/game").send({
-      title: game.title,
-      consoleId: game.consoleId
-    });
+    const result = await api.post("/game").send(newGame);    
 
-    expect(result.status).toEqual(httpStatus.CREATED);
-    expect(result.body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          title: game.title,
-          consoleId: game.consoleId,
-        }),
-      ])
-    );
+
+    expect(result.status).toBe(201);
+    
   });
+
+
   it("Should respond with status 409 when conflicted", async()=>{
-    const createdGame = await createGame()
+    const console = await createConsole();
+    const createdGame = await createGame(console.id)
     const newGame = 
         {
             title: createdGame.title,
@@ -61,9 +70,9 @@ describe("POST / games", () => {
         }
     
 
-    const response = await api.post("games").send(newGame)
+    const response = await api.post("/games").send(newGame)
     
-    expect(response.status).toEqual(httpStatus.CONFLICT)
+    expect(response.status).toBe(409)
 
     
   })

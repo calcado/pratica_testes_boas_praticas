@@ -1,11 +1,16 @@
 import supertest from "supertest";
-import app from "app";
-import prisma from "config/database";
+import app from "../../src/app";
 import httpStatus from "http-status";
 import createConsole from "../factories/consoles-factory";
+import prisma from "../../src/config/database";
+import  cleanDb  from "../helpers";
+
+beforeAll(async () => {
+  await cleanDb();
+});
 
 beforeEach(async () => {
-    await prisma.console.deleteMany({});
+    await cleanDb();
   });
 
 const api = supertest(app);
@@ -27,6 +32,8 @@ describe("POST /console", () => {
       const response = await api.post("/consoles").send({
         name: createdConsole.name
       });
+      console.log(createdConsole)
+      console.log(response.body)
 
       expect(response.status).toBe(httpStatus.CONFLICT);
     });

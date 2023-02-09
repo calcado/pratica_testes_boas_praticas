@@ -23,7 +23,7 @@ describe("GET / games", () => {
     const createdGame = await createGame();
 
     const result = await api.get("/games");
-
+    console.log(result.body)
     expect(result.status).toEqual(httpStatus.OK);
     expect(result.body).toEqual([createdGame]);
   });
@@ -37,7 +37,10 @@ describe("POST / games", () => {
       consoleId: console.id,
     };
 
-    const result = await api.post("/game").send(game);
+    const result = await api.post("/game").send({
+      title: game.title,
+      consoleId: game.consoleId
+    });
 
     expect(result.status).toEqual(httpStatus.CREATED);
     expect(result.body).toEqual(

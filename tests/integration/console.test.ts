@@ -13,6 +13,10 @@ beforeEach(async () => {
     await cleanDb();
   });
 
+afterAll(async () => {
+  await cleanDb();
+})
+
 const api = supertest(app);
 
 describe("POST /console", () => {

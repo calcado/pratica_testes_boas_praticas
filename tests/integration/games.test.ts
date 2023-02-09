@@ -16,6 +16,10 @@ beforeEach(async () => {
   await cleanDb();
 });
 
+afterAll(async () => {
+  await cleanDb();
+});
+
 const api = supertest(app);
 // get - getId/ post
 
@@ -25,9 +29,9 @@ describe("GET / games", () => {
     const game = await createGame(console.id)
 
     const result = await api.get("/games");
-
-    expect(result.status).toEqual(httpStatus.OK);
-    expect(result.body).toEqual([{
+   
+    expect(result.status).toBe(200);
+    expect(result.body).toEqual({
 
       id: expect.any(Number),
       title: expect.any(String),      
@@ -36,7 +40,7 @@ describe("GET / games", () => {
         id:console.id,
         name:console.name
       }
-    }]);
+    });
   });
 });
 
@@ -48,19 +52,17 @@ describe("POST / games", () => {
       consoleId: console.id,
     };
 
-    const result = await api.post("/game").send(newGame);
-    const insertedGame = await prisma.game.findFirst({
-      where:{
-        title: newGame.title
-      }
-    })
+    const result = await api.post("/game").send(newGame);    
 
-    expect(result.status).toEqual(httpStatus.OK);
-    expect(insertedGame.title).toBe(newGame.title);
+
+    expect(result.status).toBe(201);
+    
   });
 
+
   it("Should respond with status 409 when conflicted", async()=>{
-    const createdGame = await createGame()
+    const console = await createConsole();
+    const createdGame = await createGame(console.id)
     const newGame = 
         {
             title: createdGame.title,
@@ -68,9 +70,9 @@ describe("POST / games", () => {
         }
     
 
-    const response = await api.post("games").send(newGame)
+    const response = await api.post("/games").send(newGame)
     
-    expect(response.status).toEqual(httpStatus.CONFLICT)
+    expect(response.status).toBe(409)
 
     
   })

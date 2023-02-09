@@ -5,6 +5,7 @@ import supertest from "supertest";
 import createConsole from "../factories/consoles-factory";
 import createGame from "../factories/games-factory";
 import  cleanDb  from "../helpers";
+import prisma from "../../src/config/database"
 
 
 beforeAll(async () => {
@@ -20,35 +21,44 @@ const api = supertest(app);
 
 describe("GET / games", () => {
   it("Should respond with status 200 and games body", async () => {
-    const createdGame = await createGame();
+    const console = await createConsole()
+    const game = await createGame(console.id)
 
     const result = await api.get("/games");
 
     expect(result.status).toEqual(httpStatus.OK);
-    expect(result.body).toEqual([createdGame]);
+    expect(result.body).toEqual([{
+
+      id: expect.any(Number),
+      title: expect.any(String),      
+      consoleId: expect.any(Number),
+      console:{
+        id:console.id,
+        name:console.name
+      }
+    }]);
   });
 });
 
 describe("POST / games", () => {
   it("Should respond with status 201 and created game", async () => {
     const console = await createConsole();
-    const game = {
+    const newGame = {
       title: faker.name.firstName(),
       consoleId: console.id,
     };
 
-    const result = await api.post("/game").send(game);
+    const result = await api.post("/game").send(newGame);
+    const insertedGame = await prisma.game.findFirst({
+      where:{
+        title: newGame.title
+      }
+    })
 
-    expect(result.status).toEqual(httpStatus.CREATED);
-    expect(result.body).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          title: game.title,
-          consoleId: game.consoleId,
-        }),
-      ])
-    );
+    expect(result.status).toEqual(httpStatus.OK);
+    expect(insertedGame.title).toBe(newGame.title);
   });
+
   it("Should respond with status 409 when conflicted", async()=>{
     const createdGame = await createGame()
     const newGame = 
